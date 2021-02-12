@@ -62,8 +62,20 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
+        """Write value iteration code here"""
         "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()
+
+        for i in range(self.iterations):
+            values = self.values.copy()
+
+            for state in states:
+                action = self.getAction(state)
+
+                if action:
+                    values[state] = self.getQValue(state, action)
+
+            self.values = values
 
     def getValue(self, state):
         """
@@ -77,7 +89,15 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        q_value = 0
+        transitions_and_probs = self.mdp.getTransitionStatesAndProbs(state, action)
+
+        for next_state, prob in transitions_and_probs:
+            reward = self.mdp.getReward(state, action, next_state)
+            next_state_value = self.values[next_state]
+            q_value += prob * (reward + self.discount * next_state_value)
+
+        return q_value
 
     def computeActionFromValues(self, state):
         """
@@ -89,13 +109,25 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+
+        actions = self.mdp.getPossibleActions(state)
+        q_values = util.Counter()
+
+        for action in actions:
+            q_value = self.getQValue(state, action)
+            q_values[action] = q_value
+
+        policy = q_values.argMax()
+
+        return policy
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
 
     def getAction(self, state):
-        "Returns the policy at the state (no exploration)."
+        """Returns the policy at the state (no exploration)."""
         return self.computeActionFromValues(state)
 
     def getQValue(self, state, action):
